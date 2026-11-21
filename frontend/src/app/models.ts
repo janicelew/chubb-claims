@@ -85,6 +85,8 @@ export interface OfficerWorkload {
   openClaims: number;
   byStatus: Record<string, number>;
   totalReserve: number;
+  /** What claimants asked for on this officer's claims that have no reserve yet. */
+  claimedNotYetReserved: number;
   oldestOpenClaimDays: number;
 }
 
@@ -102,11 +104,28 @@ export interface ExposureLine {
   claimedNotYetReserved: number;
 }
 
+/** Who holds the exposure. officerId is null for claims nobody has picked up yet. */
+export interface OfficerExposure {
+  officerId: string | null;
+  name: string;
+  openClaims: number;
+  reserved: number;
+  claimedNotYetReserved: number;
+}
+
 export interface Exposure {
   totalReserved: number;
   totalClaimedNotYetReserved: number;
   openClaims: number;
   breakdown: ExposureLine[];
+  byOfficer: OfficerExposure[];
+}
+
+/** Optional narrowing of the open-claims list. */
+export interface OpenClaimsFilter {
+  officerId?: string;
+  market?: Market;
+  type?: ClaimType;
 }
 
 export interface SubmitClaimRequest {
@@ -121,4 +140,6 @@ export interface DemoUser {
   id: string;
   role: Role;
   label: string;
+  /** Staff have names (they come from the backend seed data); customers are shown by their ID. */
+  name?: string;
 }

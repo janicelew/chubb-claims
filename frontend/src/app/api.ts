@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import {
   Claim,
@@ -6,6 +6,7 @@ import {
   Exposure,
   HistoryEntry,
   InfoRequest,
+  OpenClaimsFilter,
   Policy,
   SubmitClaimRequest,
   Workload,
@@ -56,6 +57,14 @@ export class Api {
   }
   myOpenClaims() {
     return this.http.get<Claim[]>('/api/staff/my-claims');
+  }
+  /** Every open claim, optionally for one officer, market or claim type. */
+  openClaims(filter: OpenClaimsFilter = {}) {
+    let params = new HttpParams();
+    if (filter.officerId) params = params.set('officerId', filter.officerId);
+    if (filter.market) params = params.set('market', filter.market);
+    if (filter.type) params = params.set('type', filter.type);
+    return this.http.get<Claim[]>('/api/staff/open-claims', { params });
   }
   assign(claimId: string, officerId: string) {
     return this.http.post<Claim>(`/api/staff/claims/${claimId}/assign`, { officerId });

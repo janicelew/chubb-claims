@@ -6,6 +6,7 @@ import { ClaimNew } from './pages/claim-new';
 import { Exposure } from './pages/exposure';
 import { MyClaims } from './pages/my-claims';
 import { Notifications } from './pages/notifications';
+import { OpenClaims } from './pages/open-claims';
 import { Queue } from './pages/queue';
 import { Workload } from './pages/workload';
 
@@ -26,6 +27,7 @@ export const routes: Routes = [
   // staff
   { path: 'queue', component: Queue, canActivate: staffOnly },
   { path: 'my-claims', component: MyClaims, canActivate: staffOnly },
+  { path: 'open-claims', component: OpenClaims, canActivate: staffOnly },
   { path: 'workload', component: Workload, canActivate: staffOnly },
   { path: 'exposure', component: Exposure, canActivate: [roleGuard('MANAGER')] },
 
