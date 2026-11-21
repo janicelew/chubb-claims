@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: claims-service
+
+  # Default: Postgres + Kafka, as started by docker-compose.yml.
+  # Override with environment variables (DB_URL, KAFKA_BOOTSTRAP) when running in Docker.
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/claims}
+    username: ${DB_USER:claims}
+    password: ${DB_PASSWORD:claims}
+  jpa:
+    # Shortcut for a time-boxed build: Hibernate creates the tables.
+    # In production this would be Flyway migrations (see docs/DECISIONS.md).
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+
+claims:
+  kafka:
+    topic: claim-events
+  seed-demo-data: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
