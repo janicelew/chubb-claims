@@ -1,82 +1,65 @@
 # AI working journal
 
-Format per entry: **Asked**, **AI did**, **My call** (accepted / challenged / overrode) and why.
+## Why I used AI
 
-| When | Tool | Used for |
+The brief says AI is the main way to work and that I'm judged on how I direct it. So I used AI to do the
+slow parts: explaining the domain, writing code and tests, and reviewing the result. I made the
+decisions and I'm responsible for every line.
+
+| Date | Tool | Used for |
 |---|---|---|
-| 20 Nov 2026 | Claude chat (Opus 5.5) | Understanding the brief, design decisions, first build of the backend and its tests |
-| 21 Nov 2026 | Claude Code in VS Code (Sonnet 5.5) | Checking the repo against the brief, repo tidy-up, this journal |
+| 20 Nov 2026 | Claude chat (Opus 5.5) | Understanding the brief, design decisions, building the backend and tests |
+| 21 Nov 2026 | Claude Code in VS Code (Sonnet 5.5) | Checking the repo against the brief, tidying the repo, this journal |
 
-**A note on the git history.** The first five commits (scaffold, claim service and API, Kafka, dashboards,
-docs) were created on 21 Nov from the code produced in the 20 Nov chat session, so they share one
-timestamp and are split by layer, not by when I wrote them. Everything after those five is committed
-as it happens.
+**Note on git history.** The first five commits were created on 21 Nov from the code made in the 20 Nov
+chat session, so they share one timestamp and are split by layer, not by when I wrote them. Commits after
+those are made as I work.
 
 ---
 
-### 1. Understanding the brief (≈20 min)
+## What we did, and why
 
-- **Asked:** Attached the brief, then "explain to me slowly first".
-- **AI did:** Explained the problem in plain terms: claimant vs staff, the claim lifecycle as a state
-  machine, what "liability exposure" and "reserve" mean, then backend vs frontend, then REST vs Kafka.
-- **My call:** Accepted the overall framing.
-- **Challenged:** I told it "I don't understand the Kafka" part. It re-explained from a different
-  angle: what goes wrong *without* Kafka (the approve button doing email, dashboard and logging itself
-  and failing if one is down), then Kafka as a group chat that other parts read in their own time.
-  That version made sense. The rule I use and can defend: *if the user is waiting for the answer, REST;
-  if it's a side effect that can happen a moment later, Kafka.*
+### 1. Understood the brief
+- **What:** Asked the AI to explain the brief slowly: claimants vs claims staff, the claim lifecycle,
+  what "reserve" and "liability exposure" mean.
+- **Why AI:** I'm new to insurance claims. It was the fastest way to learn the domain before designing.
+- **My call:** I didn't understand the Kafka part, so I asked again. The second explanation worked: Kafka
+  is for things that can happen a moment later (like notifying the claimant), while anything the user is
+  waiting on uses REST.
 
-### 2. Stack and where to build (≈10 min)
+### 2. Chose the stack
+- **What:** Picked Java/Spring Boot, built in a real folder on my machine so the history is mine.
+- **Why AI:** It listed the options and trade-offs, so I could choose quickly.
+- **My call:** Java, because it's the common pairing with Kafka and closer to what I've used. The AI's
+  sandbox couldn't download Maven libraries, so I allowed Maven Central. I'd rather have tested code than
+  code that was never compiled.
 
-- **Asked:** The AI asked me to choose the backend language and where to build.
-- **My call:** Java/Spring Boot (the more common Kafka pairing, and closer to what I've used); build
-  into a real folder on my machine so the git history is mine.
-- **Overrode (blocker):** The AI's sandbox couldn't download Maven libraries. Rather than let it write
-  code it couldn't compile, I changed my Claude network settings to allow Maven Central so it could build
-  *and run tests*. I chose tested code over speed.
+### 3. Made the design decisions
+The AI proposed these, I accepted each, and the reasons are in [DECISIONS.md](DECISIONS.md):
+- **One modular service, not microservices:** too much cost for a 2–3 hour build.
+- **Claim history saved in the same DB transaction:** it must never disagree with the claim.
+- **Kafka only for claimant notifications:** the one thing that can wait. Everything else is REST.
+- **Events sent after commit; outbox left as a known gap:** simple now, written down for later.
+- **Header-based demo identity:** a shortcut that I know is not secure, kept in one class.
+- **Reserve as the liability measure:** the standard way insurers measure outstanding exposure.
+- **Backend first, no Angular yet:** the brief says a good backend beats a rushed attempt at both.
 
-### 3. Architecture proposals from the AI, and my decision on each
+### 4. Built the backend
+- **What:** Claim model and lifecycle rules, REST API for claimants and staff, Kafka notifications,
+  workload and exposure dashboards, and tests (including a full submit-to-settle journey test).
+- **Why AI:** Writing this much code by hand would not fit the time limit.
+- **My call:** Required tests so the AI's code was checked, not just trusted.
 
-I reviewed each proposal against the alternative. All seven are accepted; the last column is the cost I
-knowingly took on. Full reasoning is in [DECISIONS.md](DECISIONS.md).
+### 5. Caught mistakes the AI made
+- A pointless placeholder file (the AI removed it).
+- `@Version long` should be `Long`, or every new claim is treated as an existing row.
+- The test expected 6 notifications but the design sends 5. The code was right, so I fixed the test.
+- A `sed` edit broke compilation and was redone properly.
 
-| Proposal | My call | Why (and the alternative I rejected) | Cost I accepted |
-|---|---|---|---|
-| Modular monolith, not microservices | Accepted | A 2–3 hour sprint can't pay for separate databases and distributed failures. Claim, history and info requests must change in one transaction. The notification module only talks to claims through Kafka, so it is the first thing to split out. | Single deployable; scaling and ownership boundaries are only logical. |
-| History written in the same DB transaction, not via Kafka | Accepted | An audit trail must never disagree with the claim. A consumer could lag or fail and leave gaps. | History writes are on the request path. |
-| Kafka only for claimant notifications (for now) | Accepted | It is the one place with a side effect that can wait. Submit, assign, approve etc. stay REST because the officer needs to know immediately whether it worked. Email/SMS, payments and fraud scoring are listed as future consumers. | Kafka covers one flow, so its value is only partly shown. |
-| Publish after commit; transactional outbox left as a documented gap | Accepted knowingly | `AFTER_COMMIT` means we never announce a change that rolled back. The outbox is the right fix but costs a table and a relay. | If the app crashes between commit and send, that event is lost. Written up in DECISIONS.md §5. |
-| Header-based demo identity instead of real login | Accepted as a demo shortcut only | Real OAuth2/JWT would eat the time budget. Identity is isolated in `CurrentUserResolver`, so replacing it touches one class. The authorisation rules (claimants see only their own claims, officers act only on their claims, managers see exposure) are real. | Not secure. Must not ship as is. |
-| Reserve on each claim as the exposure measure | Accepted | It is the insurance-standard way to measure liability: sum of reserves on open claims. The claimant's *claimed* amount is shown separately because it is their number, not Chubb's estimate. | Needs an officer to set a reserve before a claim counts in exposure. No currency/FX across the six markets. |
-| Skip the Angular frontend; spend the time on a tested backend | Accepted | The brief says a well-built backend with a partial frontend outscores a rushed attempt at both. The OpenAPI contract and Swagger UI let a client be built directly. | The brief expects both user types in one Angular app, and this submission doesn't have it yet. |
-
-### 4. Things the AI got wrong and corrected during the build
-
-- First draft had a placeholder `Repositories.java` file with no purpose. The AI deleted it itself.
-- `@Version long` (primitive) would make Spring Data treat every new claim as an existing row
-  (a wasted SELECT and merge). Changed to `Long`, so `null` means "new".
-- The end-to-end test expected **6** claimant notifications but the design sends **5**
-  (submitted, assigned, info requested, approved, settled; review/reserve steps are internal).
-  The code was right and the test's expectation was wrong, so I fixed the test, not the code.
-- A `sed` edit put a comment before a semicolon and broke compilation; fixed with a proper edit.
-
-### 5. Checking the repo against the brief (21 Nov, Claude Code)
-
-- **Asked:** Read the assessment brief and tell me the next step.
-- **AI did:** Compared the repo with the brief's deliverables and found four gaps: the journal still had
-  placeholders, all five commits carry the same timestamp, `chubb-claims.tgz` and the brief `.docx`
-  were untracked, and there is no frontend. It proposed this order: verify the app starts, fix the
-  journal, tidy the repo, then a thin Angular slice only if time remains.
-- **My call:** Accepted the order and the gaps.
-- **Decisions on the tidy-up:**
-  - `chubb-claims.tgz` goes in `.gitignore` instead of being deleted, because it is my only copy of the
-    20 Nov snapshot outside git.
-  - The brief `.docx` stays out of the repo. It is the employer's material, not a deliverable, and the
-    README already summarises the task.
-  - The history note at the top of this file exists because the panel will compare this journal with
-    `git log`, and I would rather explain the timestamps than have them found.
-- **Reading the code:** While going through `ClaimService`, the AI noted that `assign` only checks that
-  an officer assigns to *themselves*. It doesn't check that the claim is unassigned, and
-  `Claim.assignTo` allows reassigning any open claim. So officer O-02 can take over O-01's claim
-  mid-review. The tests only cover reassigning a *closed* claim. I haven't decided how to handle this
-  yet; the outcome goes in the next entry.
+### 6. Checked the repo against the brief
+- **What:** Asked the AI to compare the repo with the brief's deliverables.
+- **Why AI:** A fast, structured checklist check.
+- **Found and did:** The journal had placeholders (now filled in). `chubb-claims.tgz` is now in
+  `.gitignore`, and I kept the brief `.docx` out of the repo because it's Chubb's material.
+- **Open issue found:** An officer can take over another officer's open claim, because `assign` only
+  checks that they assign to themselves. Tests only cover reassigning a closed claim. Not fixed yet.
