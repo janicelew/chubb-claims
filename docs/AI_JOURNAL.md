@@ -56,3 +56,21 @@ The AI proposed these, I accepted each, and the reasons are in [DECISIONS.md](DE
   checked that they assign to themselves. Now an officer can only pick up an unassigned claim (or one
   that is already theirs), and moving a claim between officers is a manager action. I checked the new
   test fails on the old code (403 expected, 200 returned) and passes with the fix.
+
+### 7. Built the Angular frontend
+- **What:** Asked the AI to build the frontend: claimant screens (my claims, report an incident, claim detail
+  with the officer's questions and history, notifications), officer screens (queue with pick up, my claims,
+  claim detail with the action buttons, workload) and manager screens (exposure, assign).
+- **Why AI:** The brief expects both user types in one Angular app, and writing it by hand would not fit the
+  time limit.
+- **My call:** I wanted a thin slice that shows one claim going from report to payment across all three roles:
+  plain CSS, no UI library, polling instead of push. Reasons and limits are in [DECISIONS.md](DECISIONS.md)
+  section 11.
+- **Checked:** 16 unit tests pass. The AI also drove the real app in a headless Chrome against the real backend
+  running in Docker: 21 checks from a claimant reporting an incident to the officer settling it, the manager's
+  dashboards, and the Kafka notifications appearing on screen. The first run showed weaknesses in the browser
+  script itself (one check passed on the wrong text) and some noise in the history display
+  ("Under review → Under review"). Both were fixed and the run repeated.
+- **Not covered:** The browser script is not in the repo, and the individual pages have no component tests.
+  Angular officially supports Node 22 and 24; this machine has Node 25, which works but gives a warning.
+
