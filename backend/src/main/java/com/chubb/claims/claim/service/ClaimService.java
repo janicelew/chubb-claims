@@ -15,6 +15,7 @@ import com.chubb.claims.staff.StaffMember;
 import com.chubb.claims.staff.StaffRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.context.ApplicationEventPublisher;
@@ -128,6 +129,22 @@ public class ClaimService {
     public List<Claim> myOpenClaims(CurrentUser user) {
         user.requireStaff();
         return claims.findByAssignedOfficerIdAndStatusInOrderByUpdatedAtAsc(user.id(), ClaimStatus.openStatuses());
+    }
+
+    /**
+     * Every open claim, oldest first, optionally narrowed to one officer, market and/or claim type.
+     * This is what a manager needs to look behind the dashboard numbers: which claims make up an
+     * officer's workload or a market's exposure.
+     */
+    @Transactional(readOnly = true)
+    public List<Claim> openClaims(CurrentUser user, String officerId, Market market, ClaimType type) {
+        user.requireStaff();
+        return claims.findByStatusIn(ClaimStatus.openStatuses()).stream()
+                .filter(c -> officerId == null || officerId.equals(c.getAssignedOfficerId()))
+                .filter(c -> market == null || c.getMarket() == market)
+                .filter(c -> type == null || c.getType() == type)
+                .sorted(Comparator.comparing(Claim::getCreatedAt))
+                .toList();
     }
 
     /**

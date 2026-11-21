@@ -38,9 +38,14 @@ public class DashboardService {
 
     // ---- workload -------------------------------------------------------
 
+    /**
+     * totalReserve          = sum of this officer's reserves (a claim with no reserve yet counts as nothing here)
+     * claimedNotYetReserved = what claimants asked for on this officer's claims that have no reserve yet,
+     *                         so "0.00 reserved" is not mistaken for "nothing at stake"
+     */
     public record OfficerWorkload(String officerId, String name, int openClaims,
                                   Map<ClaimStatus, Long> byStatus, BigDecimal totalReserve,
-                                  long oldestOpenClaimDays) {
+                                  BigDecimal claimedNotYetReserved, long oldestOpenClaimDays) {
     }
 
     public record WorkloadResponse(int unassignedClaims, long oldestUnassignedDays, List<OfficerWorkload> officers) {
@@ -62,7 +67,7 @@ public class DashboardService {
             Map<ClaimStatus, Long> byStatus = new EnumMap<>(ClaimStatus.class);
             mine.forEach(c -> byStatus.merge(c.getStatus(), 1L, Long::sum));
             officers.add(new OfficerWorkload(officer.getId(), officer.getName(), mine.size(), byStatus,
-                    sumReserves(mine), oldestAgeDays(mine, now)));
+                    sumReserves(mine), sumUnreserved(mine), oldestAgeDays(mine, now)));
         }
         officers.sort(Comparator.comparingInt(OfficerWorkload::openClaims).reversed());
         return new WorkloadResponse(unassigned.size(), oldestAgeDays(unassigned, now), officers);
@@ -79,8 +84,13 @@ public class DashboardService {
      * claimedNotYetReserved = what claimants asked for on open claims nobody has assessed yet
      *                         (shown separately: it's a claimant's number, not Chubb's estimate)
      */
+    /** Who holds the exposure. officerId is null for claims nobody has picked up yet. */
+    public record OfficerExposure(String officerId, String name, int openClaims,
+                                  BigDecimal reserved, BigDecimal claimedNotYetReserved) {
+    }
+
     public record ExposureResponse(BigDecimal totalReserved, BigDecimal totalClaimedNotYetReserved,
-                                   int openClaims, List<ExposureLine> breakdown) {
+                                   int openClaims, List<ExposureLine> breakdown, List<OfficerExposure> byOfficer) {
     }
 
     public ExposureResponse exposure(CurrentUser user) {
@@ -95,7 +105,27 @@ public class DashboardService {
                         sumReserves(g), sumUnreserved(g)))
                 .toList();
 
-        return new ExposureResponse(sumReserves(open), sumUnreserved(open), open.size(), lines);
+        return new ExposureResponse(sumReserves(open), sumUnreserved(open), open.size(), lines, byOfficer(open));
+    }
+
+    /** The same figures grouped by the officer who holds the claim; biggest reserve first. */
+    private List<OfficerExposure> byOfficer(List<Claim> open) {
+        Map<String, String> names = staff.findByRole(Role.OFFICER).stream()
+                .collect(Collectors.toMap(StaffMember::getId, StaffMember::getName));
+        // grouping by "" stands for "no officer yet" (a HashMap key cannot be null in groupingBy)
+        Map<String, List<Claim>> groups = open.stream().collect(Collectors.groupingBy(
+                c -> c.getAssignedOfficerId() == null ? "" : c.getAssignedOfficerId()));
+
+        return groups.entrySet().stream()
+                .map(e -> {
+                    String officerId = e.getKey().isEmpty() ? null : e.getKey();
+                    String name = officerId == null ? "Unassigned" : names.getOrDefault(officerId, officerId);
+                    return new OfficerExposure(officerId, name, e.getValue().size(),
+                            sumReserves(e.getValue()), sumUnreserved(e.getValue()));
+                })
+                .sorted(Comparator.comparing(OfficerExposure::reserved, Comparator.reverseOrder())
+                        .thenComparing(OfficerExposure::claimedNotYetReserved, Comparator.reverseOrder()))
+                .toList();
     }
 
     // ---- helpers --------------------------------------------------------

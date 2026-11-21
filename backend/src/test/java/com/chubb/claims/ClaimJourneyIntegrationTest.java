@@ -134,6 +134,57 @@ class ClaimJourneyIntegrationTest {
     }
 
     @Test
+    void managerCanDrillIntoOpenClaimsAndSeeExposureByOfficer() throws Exception {
+        // A Singapore motor claim, picked up by O-03 and given a reserve of 1234
+        String body = """
+                {"policyNumber":"POL-SG-M-0003","incidentDate":"%s",
+                 "description":"Side mirror knocked off in a car park","claimedAmount":1500.00}
+                """.formatted(LocalDate.now().minusDays(1));
+        String id = read(call(post("/api/claimant/claims").content(body), "C-1002", "CLAIMANT")).get("id").asText();
+        call(post("/api/staff/claims/" + id + "/assign").content("{\"officerId\":\"O-03\"}"), "O-03", "OFFICER")
+                .andExpect(status().isOk());
+        call(put("/api/staff/claims/" + id + "/reserve").content("{\"amount\":1234}"), "O-03", "OFFICER")
+                .andExpect(status().isOk());
+
+        // The open-claims list can be narrowed to an officer, a market and a claim type
+        String thisClaim = "$[?(@.id=='" + id + "')]";
+        call(get("/api/staff/open-claims?officerId=O-03"), "M-01", "MANAGER").andExpect(jsonPath(thisClaim).exists());
+        call(get("/api/staff/open-claims?officerId=O-02"), "M-01", "MANAGER").andExpect(jsonPath(thisClaim).doesNotExist());
+        call(get("/api/staff/open-claims?market=SG&type=MOTOR"), "M-01", "MANAGER").andExpect(jsonPath(thisClaim).exists());
+        call(get("/api/staff/open-claims?market=HK"), "M-01", "MANAGER").andExpect(jsonPath(thisClaim).doesNotExist());
+        call(get("/api/staff/open-claims?type=PROPERTY"), "O-01", "OFFICER").andExpect(jsonPath(thisClaim).doesNotExist());
+
+        // Claimants cannot list other people's claims
+        call(get("/api/staff/open-claims"), "C-1002", "CLAIMANT").andExpect(status().isForbidden());
+
+        // The exposure figures say who holds the liability
+        JsonNode exposure = read(call(get("/api/dashboard/exposure"), "M-01", "MANAGER"));
+        JsonNode o03 = null;
+        for (JsonNode line : exposure.get("byOfficer")) {
+            if ("O-03".equals(line.get("officerId").asText())) {
+                o03 = line;
+            }
+        }
+        assertThat(o03).as("an exposure line for O-03").isNotNull();
+        assertThat(o03.get("name").asText()).isEqualTo("Tom Wong");
+        assertThat(o03.get("openClaims").asInt()).isGreaterThanOrEqualTo(1);
+        assertThat(o03.get("reserved").decimalValue()).isGreaterThanOrEqualTo(new java.math.BigDecimal("1234"));
+
+        // The workload view separates "reserved" from "claimed but not yet assessed" per officer, so a claim
+        // with no reserve is not mistaken for "nothing at stake"
+        JsonNode workload = read(call(get("/api/dashboard/workload"), "M-01", "MANAGER"));
+        JsonNode o03Load = null;
+        for (JsonNode officer : workload.get("officers")) {
+            if ("O-03".equals(officer.get("officerId").asText())) {
+                o03Load = officer;
+            }
+        }
+        assertThat(o03Load).as("a workload line for O-03").isNotNull();
+        assertThat(o03Load.get("totalReserve").decimalValue()).isGreaterThanOrEqualTo(new java.math.BigDecimal("1234"));
+        assertThat(o03Load.has("claimedNotYetReserved")).isTrue();
+    }
+
+    @Test
     void rejectsBadRequests() throws Exception {
         // no identity headers
         mvc.perform(get("/api/claimant/claims")).andExpect(status().isUnauthorized());

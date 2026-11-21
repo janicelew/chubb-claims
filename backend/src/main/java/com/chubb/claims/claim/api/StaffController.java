@@ -1,6 +1,8 @@
 package com.chubb.claims.claim.api;
 
 import com.chubb.claims.claim.api.Dtos.*;
+import com.chubb.claims.claim.domain.ClaimType;
+import com.chubb.claims.claim.domain.Market;
 import com.chubb.claims.claim.service.ClaimService;
 import com.chubb.claims.security.CurrentUser;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,6 +35,15 @@ public class StaffController {
     @GetMapping("/my-claims")
     public List<ClaimResponse> myClaims(CurrentUser user) {
         return service.myOpenClaims(user).stream().map(ClaimResponse::from).toList();
+    }
+
+    /** All open claims for staff, optionally for one officer, market or claim type (used to drill into the dashboards). */
+    @GetMapping("/open-claims")
+    public List<ClaimResponse> openClaims(CurrentUser user,
+                                          @RequestParam(required = false) String officerId,
+                                          @RequestParam(required = false) Market market,
+                                          @RequestParam(required = false) ClaimType type) {
+        return service.openClaims(user, officerId, market, type).stream().map(ClaimResponse::from).toList();
     }
 
     @PostMapping("/claims/{claimId}/assign")
