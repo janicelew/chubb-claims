@@ -129,22 +129,27 @@ Security resource server) changes that one class. The authorisation rules are re
 
 ## 10. What staff and managers see
 
-The question was what an officer needs to manage their workload. The answer built is four things: what to
-pick up next, what is mine and going stale, how loaded everyone is, and how big the work is.
+The question was what an officer needs to manage their workload. The answer built is five things: what to
+pick up next, what is mine and going stale, how loaded everyone is, how big the work is, and a way to look
+behind any dashboard number at the claims that make it up.
 
 | View | Endpoint | Shows | Why |
 |---|---|---|---|
 | Unassigned queue | `GET /api/staff/queue` | Submitted claims nobody has, oldest first | The claim that has waited longest is the one most at risk of a broken promise to the claimant. First come, first served is also the easiest rule to explain. |
 | My claims | `GET /api/staff/my-claims` | My open claims (anything not settled or rejected), least recently touched first | Stale work rises to the top, such as a claim waiting on the claimant, or one approved but not yet paid. |
 | Claim detail | `GET /api/claims/{id}`, `/history`, `/info-requests` | One claim, its audit trail and its open questions | What an officer needs to assess and decide. |
-| Workload | `GET /api/dashboard/workload` | Per officer: open claims, count by status, total reserve, age of the oldest open claim. Plus how many claims are unassigned and how old. | A bare count hides problems. The status split shows a pile-up (for example many claims waiting for information), the reserve shows the size of the work, and the age of the oldest claim is a simple warning for slow claims. |
+| Workload | `GET /api/dashboard/workload` | Per officer: open claims, count by status, reserved, claimed but not yet assessed, age of the oldest open claim. Plus how many claims are unassigned and how old. | A bare count hides problems. The status split shows a pile-up (for example many claims waiting for information), the reserve shows the size of the work, and the age of the oldest claim is a simple warning for slow claims. "Claimed, not yet assessed" sits beside the reserve because a claim nobody has assessed adds nothing to the reserve, and "0.00 reserved" must not be read as "nothing at stake". |
+| Exposure by officer | `GET /api/dashboard/exposure` (`byOfficer`) | The same exposure figures grouped by who holds the claim, plus a line for claims nobody has picked up | A total says how much, not who is holding it. |
+| All open claims | `GET /api/staff/open-claims?officerId=&market=&type=` | Every open claim, oldest first, optionally narrowed to one officer, market or type | The drill-down behind the dashboards: click an officer on Workload, or a row on Exposure, and see the claims that make up the number. It also lets a manager reach a claim that is already assigned, which no other list shows. |
 
-Queue, my claims and workload are open to any staff member, so officers can see colleagues' load; that was
-the simple choice and could be limited to managers. Exposure (section 2) is manager-only.
+Queue, my claims, workload and all open claims are open to any staff member, so officers can see colleagues'
+load and claims; that was the simple choice and could be limited to managers. Exposure (section 2) is
+manager-only.
 
 **Limits.** "Age" is calendar days since the claim was created, not working days or time since the last
-action. There are no SLA targets or alerts, no priority or severity, no filter by market or team and no
-pagination (all in section 12). The figures are computed on request (section 9).
+action. There are no SLA targets or alerts, no priority or severity, no filter by team and no
+pagination (all in section 12). The filters on the open-claims list are applied in Java after loading the open
+claims, like the dashboards (section 9); at real volume they would be SQL conditions. The figures are computed on request (section 9).
 
 ## 11. The frontend
 
@@ -153,8 +158,8 @@ A small Angular app in `frontend/` (standalone components, signals, plain CSS, n
 | Role | Screens |
 |---|---|
 | Claimant | my claims, report an incident, claim detail (history, the officer's questions with an answer box), notifications |
-| Officer | unassigned queue with "Pick up", my open claims, claim detail with the action buttons, team workload |
-| Manager | everything above, plus liability exposure and assigning or reassigning any open claim |
+| Officer | unassigned queue with "Pick up", my open claims, all open claims, claim detail with the action buttons, team workload (click an officer for their claims) |
+| Manager | everything above, plus liability exposure (who holds it, where it is, with links to the claims behind each number) and assigning or reassigning any open claim |
 
 **Choices**
 - **Dev proxy, not CORS.** `ng serve` forwards `/api` to the backend, so the app uses relative URLs and needs no
@@ -169,14 +174,18 @@ A small Angular app in `frontend/` (standalone components, signals, plain CSS, n
   policy's cover limit).
 - **Role guards** send a user away from pages that are not theirs. The same is enforced again by the server.
 - **Plain forms** that read their fields when submitted, with no form library: fewer moving parts to explain.
+- **Names, not just IDs.** The backend sends IDs; the screens show "Raj Kumar (O-02)" using the same demo staff
+  list as the backend seed data. Customers are shown by ID. A real system would return the name.
 - **Same detail page for everyone**: a claimant gets the answer box, staff get the actions. A claimant opening someone
   else's claim gets the backend's "not found".
 
-**Checked.** 16 unit tests (button rules, identity headers, error messages, role menus). The app was also driven
-by a headless Chrome against the real backend running in Docker: 21 checks, from a claimant reporting an incident
-through pick-up, reserve, a question and its answer, approval, settlement and a manager's reassignment, to the
-manager dashboards and the claimant's Kafka-driven notifications appearing on screen. That browser script is not
-kept in the repo.
+**Checked.** 21 frontend unit tests (button rules, identity headers, error messages, role menus, names and
+ages), and 9 backend tests. The app was also driven by a headless Chrome against the real backend running in
+Docker: 36 checks. One run goes from a claimant reporting an incident through pick-up, reserve, a question and
+its answer, approval, settlement and a manager's reassignment, to the manager dashboards and the claimant's
+Kafka-driven notifications appearing on screen. The other clicks through the manager drill-down (workload to an
+officer's claims, exposure to who holds it and the claims behind each number). Those browser scripts are not kept
+in the repo.
 
 **Limits.** No real login, no pagination, polling rather than push, amounts shown without a currency, and no
 component tests for the individual pages. Angular supports Node 22 and 24 (LTS).
