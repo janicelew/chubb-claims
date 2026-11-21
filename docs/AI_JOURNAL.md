@@ -74,3 +74,17 @@ The AI proposed these, I accepted each, and the reasons are in [DECISIONS.md](DE
 - **Not covered:** The browser script is not in the repo, and the individual pages have no component tests.
   Angular officially supports Node 22 and 24; this machine has Node 25, which works but gives a warning.
 
+### 8. Tried the app and pushed back on the manager screens
+- **What:** I clicked through the app myself and said the exposure page was too brief, didn't say who was
+  holding the exposure, and that clicking an officer should show their claims. I also asked whether the total
+  reserve and "oldest open" figures were correct.
+- **AI did:** Checked the figures against each officer's real claims in the running backend. They were correct,
+  but misleading: a claim nobody has assessed adds nothing to "reserved", so "0.00" looked like "no risk" while
+  71,000 was claimed, and "0 days" didn't say "today". It then added a "claimed, not yet assessed" column, "Today"
+  instead of 0, exposure broken down by officer, a staff-only list of open claims (filterable by officer, market
+  and type) with links from every dashboard number, and officer names instead of bare IDs.
+- **My call:** Accepted the diagnosis. My challenge also exposed a gap the AI had missed: a manager had no way to
+  reach a claim that was already assigned, because no list showed it. The new "All open claims" page closes that.
+- **Checked:** 9 backend tests and 21 frontend tests pass, and a new browser script clicked through the drill-down
+  against the rebuilt backend (15 checks), after the earlier full journey was re-run to check nothing broke.
+
