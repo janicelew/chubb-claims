@@ -20,6 +20,20 @@ against it. The frontend is the first item under "Next steps".
 | **Notification** | A message to the claimant, created by the Kafka listener. |
 | **StaffMember** | Officers and managers, used for assignment checks and the workload view. |
 
+**How they relate.** `1 ──< n` means "one to many".
+
+```
+Policy 1 ──< Claim 1 ──< ClaimHistory     one row per action: who, what, from/to status, when
+                   1 ──< InfoRequest      an officer's question and the claimant's answer
+StaffMember 1 ──< Claim                   the assigned officer (empty until someone picks it up)
+Claim 1 ──< Notification                  one per update the claimant is told about
+```
+
+Only `Claim -> Policy` is a database foreign key. The other links are plain ID columns, and
+a `Notification` holds just the claim ID and number, so the notification module reads nothing from the
+claim tables (see section 4). A claimant is not a table: the claimant ID comes from the demo identity
+header and is stored as text on the policy (holder) and the claim. A real system would have a customer record.
+
 **Reserve.** Insurers call the estimate of what they'll pay on a claim the *reserve*. Liability exposure
 is the sum of reserves on open claims. The officer sets the reserve during assessment. It becomes the
 approved amount on approval and drops to 0 on settlement or rejection. Claims nobody has assessed yet
@@ -113,7 +127,26 @@ Security resource server) changes that one class. The authorisation rules are re
   (amounts are treated as one currency), which is a real gap for cross-market exposure. Production
   needs a currency per policy and FX conversion for the totals.
 
-## 10. Left out (in priority order for next steps)
+## 10. What staff and managers see
+
+The question was what an officer needs to manage their workload. The answer built is four things: what to
+pick up next, what is mine and going stale, how loaded everyone is, and how big the work is.
+
+| View | Endpoint | Shows | Why |
+|---|---|---|---|
+| Unassigned queue | `GET /api/staff/queue` | Submitted claims nobody has, oldest first | The claim that has waited longest is the one most at risk of a broken promise to the claimant. First come, first served is also the easiest rule to explain. |
+| My claims | `GET /api/staff/my-claims` | My open claims (anything not settled or rejected), least recently touched first | Stale work rises to the top, such as a claim waiting on the claimant, or one approved but not yet paid. |
+| Claim detail | `GET /api/claims/{id}`, `/history`, `/info-requests` | One claim, its audit trail and its open questions | What an officer needs to assess and decide. |
+| Workload | `GET /api/dashboard/workload` | Per officer: open claims, count by status, total reserve, age of the oldest open claim. Plus how many claims are unassigned and how old. | A bare count hides problems. The status split shows a pile-up (for example many claims waiting for information), the reserve shows the size of the work, and the age of the oldest claim is a simple warning for slow claims. |
+
+Queue, my claims and workload are open to any staff member, so officers can see colleagues' load; that was
+the simple choice and could be limited to managers. Exposure (section 2) is manager-only.
+
+**Limits.** "Age" is calendar days since the claim was created, not working days or time since the last
+action. There are no SLA targets or alerts, no priority or severity, no filter by market or team and no
+pagination (all in section 11). The figures are computed on request (section 9).
+
+## 11. Left out (in priority order for next steps)
 
 1. Angular frontend: claimant view (submit, track, answer) and officer view (queue, my claims, actions, dashboards)
 2. Transactional outbox for guaranteed event delivery
