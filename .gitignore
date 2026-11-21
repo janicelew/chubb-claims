@@ -11,6 +11,7 @@ frontend/.angular/
 # Local archives and the assessment brief (not part of the deliverable)
 *.tgz
 YGP_*.docx
+~$*
 
 # IDEs / OS
 .idea/
