@@ -5,12 +5,13 @@ questions; claims staff pick up, assess, approve/reject and settle claims; manag
 and outstanding liability exposure.
 
 **Scope:** the brief said to start with the backend and treat the frontend as optional. This submission
-is a tested Spring Boot backend; see [docs/DECISIONS.md](docs/DECISIONS.md) for what was built, what was
-left out and why.
+is a tested Spring Boot backend plus a small Angular app covering the whole journey for claimants, officers
+and managers; see [docs/DECISIONS.md](docs/DECISIONS.md) for what was built, what was left out and why.
 
 ## Run it
 
-You need **Docker Desktop** and **Java 17+**.
+You need **Docker Desktop**, **Java 17+** (only to run the backend or tests outside Docker) and
+**Node.js 22 or 24** (LTS, only for the web app).
 
 ```bash
 # Everything (Postgres, Kafka, backend) in containers:
@@ -25,6 +26,20 @@ Alternative: run only the infrastructure in Docker and the backend from your IDE
 docker compose up postgres kafka
 cd backend && ./mvnw spring-boot:run
 ```
+
+### The web app
+
+With the backend running, in a second terminal:
+
+```bash
+cd frontend
+npm install
+npm start          # http://localhost:4200
+```
+
+There is no login. Use the **Demo user** dropdown (top right) to switch between claimants, officers and
+the manager. `ng serve` forwards `/api` to the backend on port 8080, so no extra setup is needed.
+Frontend tests: `npm test`.
 
 ### Run the tests (no Docker needed)
 
@@ -91,6 +106,9 @@ curl -s $C $API/claims/$ID/history                                             #
 ## Repository layout
 
 ```
+frontend/                    Angular app (claimant, officer and manager screens)
+  src/app/                   api.ts (all backend calls), identity (demo user), poll.ts (30s refresh),
+                             claim-actions.ts (which buttons to show), pages/ (one component per screen)
 backend/                     Spring Boot service (Java 17)
   src/main/java/com/chubb/claims/
     claim/domain/            entities + lifecycle rules (ClaimStatus is the state machine)

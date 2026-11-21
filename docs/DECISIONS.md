@@ -2,12 +2,12 @@
 
 Short notes on each decision: what was chosen, why, and what would change in production.
 
-## 1. Time allocation: backend first, frontend left out
+## 1. Time allocation: backend first, then a thin frontend
 
 The brief weights the backend most and says a solid backend beats a rushed attempt at both.
-I spent the time on a tested backend that covers the whole claim lifecycle, Kafka messaging and the
-manager views. The API is documented with OpenAPI (Swagger), so an Angular client can be built directly
-against it. The frontend is the first item under "Next steps".
+I spent most of the time on a tested backend that covers the whole claim lifecycle, Kafka messaging and the
+manager views. The API is documented with OpenAPI (Swagger). On top of it I built a deliberately small Angular
+app that shows one claim going from report to payment across all three roles (section 11).
 
 ## 2. Core entities
 
@@ -97,9 +97,9 @@ database entities, so the DB can change without breaking the frontend. Errors al
 JSON shape (RFC 7807 problem details) with meaningful status codes: 400 validation, 401 no identity,
 403 not allowed, 404 not found, 409 wrong state or concurrent edit, 422 business rule.
 
-**Async on the frontend:** the claimant's screen would load the claim status and notifications over REST
-and poll every 30s or so. The next step would be server-sent events or WebSocket pushes, driven by the
-same Kafka events.
+**Async on the frontend:** the screens load claim status and notifications over REST and ask again every
+30 seconds, after any action, and when the demo user changes (`pollResource` in `frontend/src/app/poll.ts`).
+The next step would be server-sent events or WebSocket pushes, driven by the same Kafka events.
 
 ## 7. Concurrency
 
@@ -144,13 +144,48 @@ the simple choice and could be limited to managers. Exposure (section 2) is mana
 
 **Limits.** "Age" is calendar days since the claim was created, not working days or time since the last
 action. There are no SLA targets or alerts, no priority or severity, no filter by market or team and no
-pagination (all in section 11). The figures are computed on request (section 9).
+pagination (all in section 12). The figures are computed on request (section 9).
 
-## 11. Left out (in priority order for next steps)
+## 11. The frontend
 
-1. Angular frontend: claimant view (submit, track, answer) and officer view (queue, my claims, actions, dashboards)
-2. Transactional outbox for guaranteed event delivery
-3. Real authentication (OAuth2/JWT) and per-market teams
-4. Document upload (photos, police reports) to object storage
-5. Flyway migrations, currency/FX, pagination on lists
-6. SLA tracking (e.g. alert when a claim waits more than X days), push updates to the UI
+A small Angular app in `frontend/` (standalone components, signals, plain CSS, no UI library or state library).
+
+| Role | Screens |
+|---|---|
+| Claimant | my claims, report an incident, claim detail (history, the officer's questions with an answer box), notifications |
+| Officer | unassigned queue with "Pick up", my open claims, claim detail with the action buttons, team workload |
+| Manager | everything above, plus liability exposure and assigning or reassigning any open claim |
+
+**Choices**
+- **Dev proxy, not CORS.** `ng serve` forwards `/api` to the backend, so the app uses relative URLs and needs no
+  cross-origin setup. (The backend still allows `localhost:4200`, which is not needed.)
+- **A demo-user dropdown instead of a login**, matching the backend shortcut (section 8). An HTTP interceptor adds
+  `X-User-Id` and `X-User-Role` to every call. Real sign-in would replace the `Identity` class and that interceptor only.
+- **Async by polling** (section 6): one helper, `pollResource`, loads data, refreshes it every 30 seconds and after
+  each action, and ignores a slow reply that has been overtaken by a newer one.
+- **One function decides the buttons** (`allowedActions`, unit tested). It mirrors the backend lifecycle and assignment
+  rules so the screen only offers things that can work. Hiding a button is a convenience, not security: the server
+  checks everything, and if a call is refused the server's own message is shown (for example, approving above the
+  policy's cover limit).
+- **Role guards** send a user away from pages that are not theirs. The same is enforced again by the server.
+- **Plain forms** that read their fields when submitted, with no form library: fewer moving parts to explain.
+- **Same detail page for everyone**: a claimant gets the answer box, staff get the actions. A claimant opening someone
+  else's claim gets the backend's "not found".
+
+**Checked.** 16 unit tests (button rules, identity headers, error messages, role menus). The app was also driven
+by a headless Chrome against the real backend running in Docker: 21 checks, from a claimant reporting an incident
+through pick-up, reserve, a question and its answer, approval, settlement and a manager's reassignment, to the
+manager dashboards and the claimant's Kafka-driven notifications appearing on screen. That browser script is not
+kept in the repo.
+
+**Limits.** No real login, no pagination, polling rather than push, amounts shown without a currency, and no
+component tests for the individual pages. Angular supports Node 22 and 24 (LTS).
+
+## 12. Left out (in priority order for next steps)
+
+1. Transactional outbox for guaranteed event delivery
+2. Real authentication (OAuth2/JWT) and per-market teams
+3. Document upload (photos, police reports) to object storage
+4. Flyway migrations, currency/FX, pagination on lists
+5. SLA tracking (e.g. alert when a claim waits more than X days), push updates to the UI instead of polling
+6. Frontend: browser end-to-end tests kept in the repo, and tests for the individual pages
