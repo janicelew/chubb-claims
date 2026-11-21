@@ -1,0 +1,31 @@
+<header class="topbar">
+  <a class="brand" routerLink="/">Chubb APAC Claims</a>
+
+  <nav aria-label="Main">
+    @if (role() === 'CLAIMANT') {
+      <a routerLink="/claims" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">My claims</a>
+      <a routerLink="/claims/new" routerLinkActive="active">Report an incident</a>
+      <a routerLink="/notifications" routerLinkActive="active">Notifications</a>
+    } @else {
+      <a routerLink="/queue" routerLinkActive="active">Queue</a>
+      <a routerLink="/my-claims" routerLinkActive="active">My claims</a>
+      <a routerLink="/workload" routerLinkActive="active">Workload</a>
+      @if (role() === 'MANAGER') {
+        <a routerLink="/exposure" routerLinkActive="active">Exposure</a>
+      }
+    }
+  </nav>
+
+  <label class="who">
+    <span>Demo user</span>
+    <select (change)="switchUser($event)" aria-label="Demo user">
+      @for (u of users; track u.id) {
+        <option [value]="u.id" [selected]="u.id === identity.user().id">{{ u.label }}</option>
+      }
+    </select>
+  </label>
+</header>
+
+<main>
+  <router-outlet />
+</main>
