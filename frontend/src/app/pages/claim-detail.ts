@@ -183,7 +183,7 @@ import { StatusBadge } from '../status-badge';
                 <div>{{ h.note }}</div>
               }
               <div class="when capitalize">
-                @if (h.fromStatus) {
+                @if (h.fromStatus && h.fromStatus !== h.toStatus) {
                   {{ words(h.fromStatus) }} →
                 }
                 {{ words(h.toStatus) }} · {{ h.occurredAt | date: 'medium' }}
