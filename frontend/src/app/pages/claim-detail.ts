@@ -5,7 +5,7 @@ import { Observable, forkJoin, map } from 'rxjs';
 import { Api } from '../api';
 import { ACTION_LABELS, ClaimAction, allowedActions } from '../claim-actions';
 import { errorMessage } from '../errors';
-import { Identity } from '../identity';
+import { Identity, displayName } from '../identity';
 import { Claim } from '../models';
 import { pollResource } from '../poll';
 import { StatusBadge } from '../status-badge';
@@ -51,7 +51,10 @@ import { StatusBadge } from '../status-badge';
             <dt>Approved</dt>
             <dd>{{ d.claim.approvedAmount === null ? '—' : (d.claim.approvedAmount | number: '1.2-2') }}</dd>
           </div>
-          <div><dt>Handled by</dt><dd>{{ d.claim.assignedOfficerId ?? 'Not assigned yet' }}</dd></div>
+          <div>
+            <dt>Handled by</dt>
+            <dd>{{ d.claim.assignedOfficerId === null ? 'Not assigned yet' : name(d.claim.assignedOfficerId) }}</dd>
+          </div>
           <div><dt>Reported</dt><dd>{{ d.claim.createdAt | date: 'medium' }}</dd></div>
           <div><dt>Last updated</dt><dd>{{ d.claim.updatedAt | date: 'medium' }}</dd></div>
         </dl>
@@ -177,7 +180,7 @@ import { StatusBadge } from '../status-badge';
             <li>
               <div>
                 <strong class="capitalize">{{ words(h.eventType) }}</strong>
-                <span class="muted"> by {{ h.actorId }}</span>
+                <span class="muted"> by {{ name(h.actorId) }}</span>
               </div>
               @if (h.note) {
                 <div>{{ h.note }}</div>
@@ -201,6 +204,7 @@ export class ClaimDetail {
   private readonly id = inject(ActivatedRoute).snapshot.paramMap.get('id') ?? '';
 
   protected readonly labels = ACTION_LABELS;
+  protected readonly name = displayName;
   protected readonly detail = pollResource(() =>
     forkJoin({
       claim: this.api.claim(this.id),

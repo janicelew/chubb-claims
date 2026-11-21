@@ -1,6 +1,7 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { displayName } from './identity';
 import { Claim } from './models';
 import { StatusBadge } from './status-badge';
 
@@ -16,6 +17,9 @@ import { StatusBadge } from './status-badge';
         <thead>
           <tr>
             <th>Claim</th>
+            @if (showClaimant()) {
+              <th>Claimant</th>
+            }
             <th>Type · market</th>
             <th>Status</th>
             <th class="num">Claimed</th>
@@ -30,12 +34,15 @@ import { StatusBadge } from './status-badge';
         <tbody>
           @for (c of claims(); track c.id) {
             <tr>
-              <td><a [routerLink]="['/claims', c.id]">{{ c.claimNumber }}</a></td>
+              <td class="nowrap"><a [routerLink]="['/claims', c.id]">{{ c.claimNumber }}</a></td>
+              @if (showClaimant()) {
+                <td>{{ c.claimantId }}</td>
+              }
               <td>{{ c.type }} · {{ c.market }}</td>
               <td><app-status-badge [status]="c.status" /></td>
               <td class="num">{{ c.claimedAmount | number: '1.2-2' }}</td>
-              <td class="num">{{ c.reserveAmount === null ? '—' : (c.reserveAmount | number: '1.2-2') }}</td>
-              <td>{{ c.assignedOfficerId ?? '—' }}</td>
+              <td class="num">{{ c.reserveAmount === null ? 'not set' : (c.reserveAmount | number: '1.2-2') }}</td>
+              <td class="nowrap">{{ c.assignedOfficerId === null ? 'Not assigned' : name(c.assignedOfficerId) }}</td>
               <td>{{ c.updatedAt | date: 'medium' }}</td>
               @if (canPickUp()) {
                 <td><button type="button" (click)="pickUp.emit(c)">Pick up</button></td>
@@ -52,5 +59,9 @@ export class ClaimTable {
   readonly emptyText = input('No claims to show.');
   /** Show a "Pick up" button on each row (officers, on the queue). */
   readonly canPickUp = input(false);
+  /** Show who made the claim (useful for staff looking across many claims). */
+  readonly showClaimant = input(false);
   readonly pickUp = output<Claim>();
+
+  protected readonly name = displayName;
 }

@@ -6,11 +6,28 @@ export const DEMO_USERS: DemoUser[] = [
   { id: 'C-1001', role: 'CLAIMANT', label: 'C-1001 · Claimant (MY motor + property)' },
   { id: 'C-1002', role: 'CLAIMANT', label: 'C-1002 · Claimant (SG motor)' },
   { id: 'C-1003', role: 'CLAIMANT', label: 'C-1003 · Claimant (HK property)' },
-  { id: 'O-01', role: 'OFFICER', label: 'O-01 · Officer · Mei Ling Tan' },
-  { id: 'O-02', role: 'OFFICER', label: 'O-02 · Officer · Raj Kumar' },
-  { id: 'O-03', role: 'OFFICER', label: 'O-03 · Officer · Tom Wong' },
-  { id: 'M-01', role: 'MANAGER', label: 'M-01 · Manager · Sarah Lim' },
+  { id: 'O-01', role: 'OFFICER', label: 'O-01 · Officer · Mei Ling Tan', name: 'Mei Ling Tan' },
+  { id: 'O-02', role: 'OFFICER', label: 'O-02 · Officer · Raj Kumar', name: 'Raj Kumar' },
+  { id: 'O-03', role: 'OFFICER', label: 'O-03 · Officer · Tom Wong', name: 'Tom Wong' },
+  { id: 'M-01', role: 'MANAGER', label: 'M-01 · Manager · Sarah Lim', name: 'Sarah Lim' },
 ];
+
+/**
+ * How to show a person in the screens: "Raj Kumar (O-02)" for staff, the plain ID for anyone else.
+ * The backend only sends IDs, so the names come from the same demo seed data the backend uses.
+ */
+export function displayName(id: string | null): string {
+  if (id === null) {
+    return '—';
+  }
+  const user = DEMO_USERS.find((u) => u.id === id);
+  return user?.name ? `${user.name} (${id})` : id;
+}
+
+/** "Today", "1 day", "5 days": how long a claim has been open, in whole calendar days. */
+export function ageLabel(days: number): string {
+  return days <= 0 ? 'Today' : days === 1 ? '1 day' : `${days} days`;
+}
 
 const STORAGE_KEY = 'chubb-claims-demo-user';
 
