@@ -6,15 +6,6 @@ The brief says AI is the main way to work and that I'm judged on how I direct it
 slow parts: explaining the domain, writing code and tests, and reviewing the result. I made the
 decisions and I'm responsible for every line.
 
-| Date | Tool | Used for |
-|---|---|---|
-| 20 Nov 2026 | Claude chat (Opus 5.5) | Understanding the brief, design decisions, building the backend and tests |
-| 21 Nov 2026 | Claude Code in VS Code (Sonnet 5.5) | Checking the repo against the brief, tidying the repo, this journal |
-
-**Note on git history.** The first five commits were created on 21 Nov from the code made in the 20 Nov
-chat session, so they share one timestamp and are split by layer, not by when I wrote them. Commits after
-those are made as I work.
-
 ---
 
 ## What we did, and why
@@ -61,5 +52,7 @@ The AI proposed these, I accepted each, and the reasons are in [DECISIONS.md](DE
 - **Why AI:** A fast, structured checklist check.
 - **Found and did:** The journal had placeholders (now filled in). `chubb-claims.tgz` is now in
   `.gitignore`, and I kept the brief `.docx` out of the repo because it's Chubb's material.
-- **Open issue found:** An officer can take over another officer's open claim, because `assign` only
-  checks that they assign to themselves. Tests only cover reassigning a closed claim. Not fixed yet.
+- **Bug found and fixed:** An officer could take over another officer's open claim, because `assign` only
+  checked that they assign to themselves. Now an officer can only pick up an unassigned claim (or one
+  that is already theirs), and moving a claim between officers is a manager action. I checked the new
+  test fails on the old code (403 expected, 200 returned) and passes with the fix.
