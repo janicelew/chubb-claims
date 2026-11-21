@@ -99,7 +99,7 @@ as a demo stand-in. It's isolated in `CurrentUserResolver`, so swapping in real 
 Security resource server) changes that one class. The authorisation rules are real and tested:
 
 - claimants only see their own claims (404 for others, so IDs can't be probed)
-- officers only act on claims assigned to them
+- officers only act on claims assigned to them, and can only pick up claims nobody else has; moving a claim from one officer to another is a manager action
 - only managers see exposure
 
 ## 9. Data and infrastructure

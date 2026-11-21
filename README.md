@@ -82,7 +82,7 @@ curl -s $C $API/claims/$ID/history                                             #
 | Both | `GET /api/claims/{id}`, `/history`, `/info-requests` | claim detail, audit trail, questions |
 | Staff | `GET /api/staff/queue` | unassigned claims, oldest first |
 | Staff | `GET /api/staff/my-claims` | my open claims |
-| Staff | `POST /api/staff/claims/{id}/assign` | pick up (officer) / assign (manager) |
+| Staff | `POST /api/staff/claims/{id}/assign` | pick up an unassigned claim (officer) / assign or reassign (manager) |
 | Staff | `POST .../start-review`, `PUT .../reserve`, `POST .../info-requests` | assess |
 | Staff | `POST .../approve`, `.../reject`, `.../settle` | decide and pay |
 | Staff | `GET /api/dashboard/workload` | open claims per officer, backlog age |

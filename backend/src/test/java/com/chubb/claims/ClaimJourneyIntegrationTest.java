@@ -104,6 +104,36 @@ class ClaimJourneyIntegrationTest {
     }
 
     @Test
+    void officerCannotTakeOverAnotherOfficersClaimButManagerCanReassign() throws Exception {
+        String body = """
+                {"policyNumber":"POL-MY-M-0001","incidentDate":"%s",
+                 "description":"Hit a pothole, wheel damaged","claimedAmount":900.00}
+                """.formatted(LocalDate.now().minusDays(1));
+        String id = read(call(post("/api/claimant/claims").content(body), "C-1001", "CLAIMANT"))
+                .get("id").asText();
+
+        // O-02 picks it up
+        call(post("/api/staff/claims/" + id + "/assign").content("{\"officerId\":\"O-02\"}"), "O-02", "OFFICER")
+                .andExpect(jsonPath("$.assignedOfficerId").value("O-02"));
+
+        // O-03 can't take it over, and it stays with O-02
+        call(post("/api/staff/claims/" + id + "/assign").content("{\"officerId\":\"O-03\"}"), "O-03", "OFFICER")
+                .andExpect(status().isForbidden());
+        call(get("/api/claims/" + id), "O-02", "OFFICER").andExpect(jsonPath("$.assignedOfficerId").value("O-02"));
+
+        // Picking up a claim that is already yours is harmless
+        call(post("/api/staff/claims/" + id + "/assign").content("{\"officerId\":\"O-02\"}"), "O-02", "OFFICER")
+                .andExpect(status().isOk());
+
+        // A manager can move it. Afterwards only the new owner can work on it.
+        call(post("/api/staff/claims/" + id + "/assign").content("{\"officerId\":\"O-03\"}"), "M-01", "MANAGER")
+                .andExpect(jsonPath("$.assignedOfficerId").value("O-03"));
+        call(post("/api/staff/claims/" + id + "/start-review"), "O-02", "OFFICER").andExpect(status().isForbidden());
+        call(post("/api/staff/claims/" + id + "/start-review"), "O-03", "OFFICER")
+                .andExpect(jsonPath("$.status").value("UNDER_REVIEW"));
+    }
+
+    @Test
     void rejectsBadRequests() throws Exception {
         // no identity headers
         mvc.perform(get("/api/claimant/claims")).andExpect(status().isUnauthorized());

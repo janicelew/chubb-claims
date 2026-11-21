@@ -130,7 +130,10 @@ public class ClaimService {
         return claims.findByAssignedOfficerIdAndStatusInOrderByUpdatedAtAsc(user.id(), ClaimStatus.openStatuses());
     }
 
-    /** Officers may only assign to themselves ("pick up"); managers may assign to any officer. */
+    /**
+     * Officers may only "pick up" a claim for themselves, and only if nobody else has it.
+     * Moving a claim from one officer to another is a manager decision.
+     */
     public Claim assign(CurrentUser user, UUID claimId, String officerId) {
         user.requireStaff();
         if (user.role() == Role.OFFICER && !user.id().equals(officerId)) {
@@ -140,6 +143,11 @@ public class ClaimService {
                 .filter(s -> s.getRole() == Role.OFFICER)
                 .orElseThrow(() -> new BusinessRuleException(officerId + " is not a claims officer"));
         Claim claim = load(claimId);
+        String currentOwner = claim.getAssignedOfficerId();
+        if (user.role() == Role.OFFICER && currentOwner != null && !currentOwner.equals(user.id())) {
+            throw new ForbiddenException("Claim " + claim.getClaimNumber()
+                    + " is already assigned to another officer. Ask a manager to reassign it.");
+        }
         ClaimStatus from = claim.getStatus();
         claim.assignTo(officer.getId());
         record(claim, ClaimEventType.CLAIM_ASSIGNED, from, user.id(), "Assigned to " + officer.getName());
