@@ -81,7 +81,7 @@ public class Claim {
      * same time, the second save fails instead of silently overwriting the first.
      */
     @Version
-    private long version;
+    private Long version; // null = not saved yet, so Spring Data knows to INSERT
 
     protected Claim() {
     }
@@ -198,5 +198,5 @@ public class Claim {
     public String getDecisionReason() { return decisionReason; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public Long getVersion() { return version; }
 }
