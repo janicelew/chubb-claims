@@ -140,6 +140,23 @@ left out when it didn't apply.
 - **Why:** A check that depends on today's date will fail for the next person, and a number I can't reproduce
   isn't worth quoting.
 
+### 12. An Age column for each claim
+- **Challenged:** I asked the AI what "Oldest open" on the workload page means. It is one number per officer: the
+  age of that officer's oldest open claim. I said one number for a whole officer isn't enough and asked for the
+  age to be shown in the table for each claim.
+- **Accepted:** The AI added an **Age** column to the shared claim table, so it appears on the queue, my claims,
+  all open claims and a claimant's own list. It is worked out from each claim's own submit time, and finished
+  (settled or rejected) claims show a dash. The per-officer number on the workload page stays.
+- **Found:** While reading the backend to answer my question, the AI saw that age counts whole 24-hour periods,
+  not calendar days as DECISIONS.md and a code comment said. It corrected the wording and left the behaviour
+  alone, because the two pages must agree.
+- **Checked:** 8 new tests (36 frontend tests in total). The AI broke the table on purpose so it read the "last
+  updated" time instead of the "submitted" time, and two tests failed ("Expected: 1 day, Received: Today"). Then
+  it put the code back. A new browser check (39 in total) confirms that every open claim in the real list shows
+  an Age, and the screenshot matched the data.
+- **Why:** A per-officer number can hide one slow claim. With an Age on every row, a manager can see exactly
+  which claim is stuck and open it.
+
 ---
 
 Known gaps are listed in [DECISIONS.md](DECISIONS.md) section 12.
