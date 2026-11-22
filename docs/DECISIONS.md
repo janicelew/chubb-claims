@@ -146,7 +146,12 @@ Queue, my claims, workload and all open claims are open to any staff member, so 
 load and claims; that was the simple choice and could be limited to managers. Exposure (section 2) is
 manager-only.
 
-**Limits.** "Age" is calendar days since the claim was created, not working days or time since the last
+Every claim list (queue, my claims, all open claims, and a claimant's own list) also has an **Age** column: how
+long that claim has been open, so a manager or officer can see which individual claims are slow, not only the
+oldest one per officer. It is worked out on the screen from the claim's own creation time, with the same rule as
+the workload page, and finished claims (settled or rejected) show a dash.
+
+**Limits.** "Age" is whole 24-hour periods since the claim was created, not working days or time since the last
 action. There are no SLA targets or alerts, no priority or severity, no filter by team and no
 pagination (all in section 12). The filters on the open-claims list are applied in Java after loading the open
 claims, like the dashboards (section 9); at real volume they would be SQL conditions. The figures are computed on request (section 9).
@@ -179,14 +184,15 @@ A small Angular app in `frontend/` (standalone components, signals, plain CSS, n
 - **Same detail page for everyone**: a claimant gets the answer box, staff get the actions. A claimant opening someone
   else's claim gets the backend's "not found".
 
-**Checked.** 28 frontend tests (button rules, identity headers, error messages, role menus, names and ages, and
-a page test for Team workload that feeds the screen made-up answers), and 9 backend tests. The app was also
-driven by a headless Chrome against the real backend running in Docker: 38 checks, in two scripts in
+**Checked.** 36 frontend tests (button rules, identity headers, error messages, role menus, names and ages, the
+claim table's Age column, and a page test for Team workload that feeds the screen made-up answers), and 9 backend
+tests. The app was also driven by a headless Chrome against the real backend running in Docker: 39 checks, in two
+scripts in
 [`frontend/e2e/`](../frontend/e2e/README.md). One goes from a claimant
 reporting an incident through pick-up, reserve, a question and its answer, approval, settlement and a manager's
 reassignment, to the manager dashboards and the claimant's Kafka-driven notifications appearing on screen (21
 checks). The other clicks through the manager drill-down: workload to an officer's claims, exposure to who holds
-it and the claims behind each number (17 checks, two of which use a made-up workload answer so the "Today"
+it and the claims behind each number (18 checks, two of which use a made-up workload answer so the "Today"
 wording can be checked on any day). They need the whole system running and Chrome installed, so
 they are run by hand with `npm test` in that folder and are not part of `ng test`.
 

@@ -24,7 +24,7 @@ export function displayName(id: string | null): string {
   return user?.name ? `${user.name} (${id})` : id;
 }
 
-/** "Today", "1 day", "5 days": how long a claim has been open, in whole calendar days. */
+/** "Today", "1 day", "5 days": how long a claim has been open, in whole days (24-hour periods). */
 export function ageLabel(days: number): string {
   return days <= 0 ? 'Today' : days === 1 ? '1 day' : `${days} days`;
 }
