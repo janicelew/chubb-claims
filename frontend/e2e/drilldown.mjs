@@ -83,6 +83,16 @@ try {
   check('the list has a Claimant column and totals', listText.toLowerCase().includes('claimant') && listText.includes("reserved (officers' estimates)"));
   await shot('21-officer-claims');
 
+  // 2b. every claim in the list has its own Age (these are all open claims, so never a dash)
+  const heads = (await page.locator('thead th').allInnerTexts()).map((h) => h.trim().toLowerCase());
+  const ageColumn = heads.indexOf('age');
+  const claimAges = ageColumn < 0 ? [] : (await page.locator(`tbody tr td:nth-child(${ageColumn + 1})`).allInnerTexts()).map((a) => a.trim());
+  check(
+    'each open claim in the list shows its own Age (Today / 1 day / N days)',
+    claimAges.length > 0 && claimAges.every((a) => /^(Today|[1-9]\d* days?)$/.test(a)),
+    JSON.stringify({ heads, claimAges }),
+  );
+
   // 3. open one of those claims: the manager can reach a claim that is already assigned, and sees names
   await page.locator('tbody tr a').first().click();
   await page.waitForURL(/\/claims\/[0-9a-f-]{36}$/);
