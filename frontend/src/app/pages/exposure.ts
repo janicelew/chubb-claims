@@ -57,7 +57,7 @@ import { pollResource } from '../poll';
               <tr>
                 <td>
                   @if (o.officerId === null) {
-                    <a routerLink="/queue">Unassigned</a> <span class="muted">(nobody has picked these up)</span>
+                    <a routerLink="/queue">Unassigned</a><span class="muted"> (nobody has picked these up)</span>
                   } @else {
                     <a [routerLink]="['/open-claims']" [queryParams]="{ officerId: o.officerId }">{{ o.name }}</a>
                     <span class="muted"> ({{ o.officerId }})</span>
