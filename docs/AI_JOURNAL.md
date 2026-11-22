@@ -82,8 +82,8 @@ left out when it didn't apply.
   the manager's dashboards, and the Kafka notifications appearing on screen. The first run showed weaknesses in
   the browser script itself (one check passed on the wrong text) and noise in the history display
   ("Under review → Under review"). Both were fixed and the run repeated.
-- **Not covered:** Only the Team workload page has a page test of its own (entry 11). The other pages are covered
-  by the browser checks, but only when they are run by hand. Angular officially supports Node 22 and 24. This
+- **Not covered:** Only the Team workload and Liability exposure pages have page tests of their own (entries 11
+  and 13). The other pages are covered by the browser checks, but only when they are run by hand. Angular officially supports Node 22 and 24. This
   machine has Node 25, which works but gives a warning.
 
 ### 9. Trying the app and pushing back on the manager screens
@@ -156,6 +156,22 @@ left out when it didn't apply.
   an Age, and the screenshot matched the data.
 - **Why:** A per-officer number can hide one slow claim. With an Age on every row, a manager can see exactly
   which claim is stuck and open it.
+
+### 13. A demo video, and a flaw it showed up
+- **Asked:** For a 2 to 3 minute screen video of the app that an interviewer can watch without installing
+  anything. I said no voice-over was needed, so the AI made it silent, with captions and a visible mouse pointer.
+  It is a script that drives the real app at a human pace and records the screen. The video is too big for the
+  repo, so it is shared by link instead.
+- **Accepted:** Resetting the demo database so the video starts from clean data, and creating a few extra claims
+  through the API beforehand so the manager screens have something to show. My own test claims would have made
+  the dashboards look strange (for example 421,000 claimed against a reserve of 0.00).
+- **Found:** Watching the clean recording, the AI noticed that on the Exposure page the text "Unassigned" and
+  "(nobody has picked these up)" ran together with no space. Angular drops a space that sits between two tags, so
+  the fix is to put the space inside the text. The AI also wrote a page test for the Exposure screen and checked
+  that it fails on the old markup, then re-recorded the video.
+- **Checked:** 39 frontend tests pass.
+- **Why:** A flaw visible in the first minute of a demo costs more than the 10 minutes it took to fix, and the
+  recording was the first time anyone looked at that screen with realistic data.
 
 ---
 
