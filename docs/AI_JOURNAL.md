@@ -160,8 +160,8 @@ left out when it didn't apply.
 ### 13. A demo video, and a flaw it showed up
 - **Asked:** For a 2 to 3 minute screen video of the app that an interviewer can watch without installing
   anything. I said no voice-over was needed, so the AI made it silent, with captions and a visible mouse pointer.
-  It is a script that drives the real app at a human pace and records the screen. The video is too big for the
-  repo, so it is shared by link instead.
+  It is a script that drives the real app at a human pace and records the screen. The video file itself is kept
+  outside the repo because it is too big for GitHub.
 - **Accepted:** Resetting the demo database so the video starts from clean data, and creating a few extra claims
   through the API beforehand so the manager screens have something to show. My own test claims would have made
   the dashboards look strange (for example 421,000 claimed against a reserve of 0.00).
