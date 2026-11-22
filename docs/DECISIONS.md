@@ -179,17 +179,19 @@ A small Angular app in `frontend/` (standalone components, signals, plain CSS, n
 - **Same detail page for everyone**: a claimant gets the answer box, staff get the actions. A claimant opening someone
   else's claim gets the backend's "not found".
 
-**Checked.** 21 frontend unit tests (button rules, identity headers, error messages, role menus, names and
-ages), and 9 backend tests. The app was also driven by a headless Chrome against the real backend running in
-Docker: 36 checks, in two scripts in [`frontend/e2e/`](../frontend/e2e/README.md). One goes from a claimant
+**Checked.** 28 frontend tests (button rules, identity headers, error messages, role menus, names and ages, and
+a page test for Team workload that feeds the screen made-up answers), and 9 backend tests. The app was also
+driven by a headless Chrome against the real backend running in Docker: 38 checks, in two scripts in
+[`frontend/e2e/`](../frontend/e2e/README.md). One goes from a claimant
 reporting an incident through pick-up, reserve, a question and its answer, approval, settlement and a manager's
 reassignment, to the manager dashboards and the claimant's Kafka-driven notifications appearing on screen (21
 checks). The other clicks through the manager drill-down: workload to an officer's claims, exposure to who holds
-it and the claims behind each number (15 checks). They need the whole system running and Chrome installed, so
+it and the claims behind each number (17 checks, two of which use a made-up workload answer so the "Today"
+wording can be checked on any day). They need the whole system running and Chrome installed, so
 they are run by hand with `npm test` in that folder and are not part of `ng test`.
 
 **Limits.** No real login, no pagination, polling rather than push, amounts shown without a currency, and no
-component tests for the individual pages (the browser checks cover the screens instead, but only when run by
+page tests except for Team workload (the browser checks cover the other screens instead, but only when run by
 hand). Angular supports Node 22 and 24 (LTS); Node 25 works but prints a warning.
 
 ## 12. Left out (in priority order for next steps)

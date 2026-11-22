@@ -39,7 +39,7 @@ npm start          # http://localhost:4200
 
 There is no login. Use the **Demo user** dropdown (top right) to switch between claimants, officers and
 the manager. `ng serve` forwards `/api` to the backend on port 8080, so no extra setup is needed.
-Frontend unit tests: `npm test`. With everything running, `frontend/e2e` has 36 browser checks that click
+Frontend tests (28): `npm test`. With everything running, `frontend/e2e` has 38 browser checks that click
 through the app (see [frontend/e2e/README.md](frontend/e2e/README.md)).
 
 ### Run the tests (no Docker needed)
