@@ -10,6 +10,8 @@ npm test       # unit tests
 npm run build  # production build into dist/
 ```
 
+There are also browser checks that click through the running app: see [e2e/README.md](e2e/README.md).
+
 `ng serve` forwards `/api` to `http://localhost:8080` (see `proxy.conf.json`). There is no login: choose a demo
 user from the dropdown in the top bar. Use Node.js 22 or 24 (LTS).
 

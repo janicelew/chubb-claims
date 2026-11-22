@@ -39,7 +39,8 @@ npm start          # http://localhost:4200
 
 There is no login. Use the **Demo user** dropdown (top right) to switch between claimants, officers and
 the manager. `ng serve` forwards `/api` to the backend on port 8080, so no extra setup is needed.
-Frontend tests: `npm test`.
+Frontend unit tests: `npm test`. With everything running, `frontend/e2e` has 36 browser checks that click
+through the app (see [frontend/e2e/README.md](frontend/e2e/README.md)).
 
 ### Run the tests (no Docker needed)
 
@@ -110,6 +111,7 @@ curl -s $C $API/claims/$ID/history                                             #
 frontend/                    Angular app (claimant, officer and manager screens)
   src/app/                   api.ts (all backend calls), identity (demo user), poll.ts (30s refresh),
                              claim-actions.ts (which buttons to show), pages/ (one component per screen)
+  e2e/                       browser checks that click through the running app (run by hand)
 backend/                     Spring Boot service (Java 17)
   src/main/java/com/chubb/claims/
     claim/domain/            entities + lifecycle rules (ClaimStatus is the state machine)
