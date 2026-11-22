@@ -82,8 +82,9 @@ left out when it didn't apply.
   the manager's dashboards, and the Kafka notifications appearing on screen. The first run showed weaknesses in
   the browser script itself (one check passed on the wrong text) and noise in the history display
   ("Under review → Under review"). Both were fixed and the run repeated.
-- **Not covered:** The browser script is not in the repo, and the individual pages have no component tests.
-  Angular officially supports Node 22 and 24. This machine has Node 25, which works but gives a warning.
+- **Not covered:** The individual pages have no component tests of their own. The browser checks cover them
+  instead, but only when they are run by hand (see entry 11). Angular officially supports Node 22 and 24. This
+  machine has Node 25, which works but gives a warning.
 
 ### 9. Trying the app and pushing back on the manager screens
 - **Challenged:** I clicked through the app myself and said the exposure page was too brief, didn't say who
@@ -98,6 +99,7 @@ left out when it didn't apply.
   a claim that was already assigned, because no list showed it. The new "All open claims" page closes that.
 - **Checked:** 9 backend tests and 21 frontend tests pass. A new browser script clicked through the drill-down
   against the rebuilt backend (15 checks), after the earlier full journey was re-run to check nothing broke.
+  Both browser scripts are now in the repo (see entry 11).
 
 ### 10. Commits and GitHub history
 - **Asked:** To commit in small pieces as it worked, so the history shows the steps.
@@ -109,6 +111,21 @@ left out when it didn't apply.
   commit and recreated the repository with a clean history.
 - **Why:** The history should show my work under my name, and I should check the AI's explanation against
   evidence before accepting it.
+
+### 11. Putting the browser checks in the repo
+- **Challenged:** The journal said the browser script was "not in the repo". I asked what that meant. It meant the
+  checks I'd been quoting could only be run from the AI's scratch folder, so nobody else could re-run them.
+- **Asked:** To add both scripts to the repo, with a README on how to run them. They live in `frontend/e2e/`,
+  as their own small project so the Angular app's dependencies don't change.
+- **Accepted:** That they are run by hand and not part of `ng test`: they need the whole system running and
+  Chrome installed. This is written down in their README and in [DECISIONS.md](DECISIONS.md) section 11.
+- **Found:** When the AI re-ran them from the repo, 1 of the 36 checks failed ("same-day claims show 'Today'").
+  The AI looked at the real data before deciding who was wrong. The app was right: the demo claims were now a
+  day old, so no officer's oldest claim could say "Today". The check only passed on the day the data was
+  created. I accepted the fix: the check now tests the wording (a dash, "Today", or 1 or more days, never 0),
+  and the exact "Today" rule stays covered by a unit test. Result: 21 of 21 and 15 of 15 pass.
+- **Why:** A check that depends on today's date will fail for the next person, and a number I can't reproduce
+  isn't worth quoting.
 
 ---
 
