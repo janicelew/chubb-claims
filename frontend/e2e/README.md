@@ -31,6 +31,6 @@ Each check prints `PASS` or `FAIL`, and the exit code is non-zero if any fail. S
   to your Chrome, or Playwright looks for an installed Chrome. If the app is not on port 4200, set `APP_URL`.
 - **They add claims to the running backend** (two per run, marked "browser test" or "cover limit"). To start from
   clean demo data: `docker compose down -v`, then `docker compose up --build`.
-- **They are not part of `ng test`.** Those are the 36 unit and page tests. These need the running system.
+- **They are not part of `ng test`.** Those are the 39 unit and page tests. These need the running system.
 - **Two checks use made-up data on purpose.** The ones marked "(made-up data)" replace the backend's workload
   answer with a fixed one, so "Today" can be checked on any day. Everything around them is real.

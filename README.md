@@ -109,7 +109,7 @@ can replace it.
 | What | Command | What it covers |
 |---|---|---|
 | Backend (9 tests) | `cd backend && ./mvnw test` | The lifecycle rules, and a full claim from submission to settlement over HTTP, with the Kafka notifications arriving. Uses an in-memory database and an embedded Kafka. Needs Java 17. |
-| Frontend (36 tests) | `cd frontend && npm test` | Which buttons each role sees, the demo-user headers, error messages, names and ages, the claim table and the Team workload page. |
+| Frontend (39 tests) | `cd frontend && npm test` | Which buttons each role sees, the demo-user headers, error messages, names and ages, the claim table, and the Team workload and Liability exposure pages. |
 | Browser checks (39 checks) | `cd frontend/e2e && npm install && npm test` | A headless Chrome clicks through the whole running app. The backend and web app must be running. See [frontend/e2e/README.md](frontend/e2e/README.md). |
 
 ---

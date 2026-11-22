@@ -184,11 +184,10 @@ A small Angular app in `frontend/` (standalone components, signals, plain CSS, n
 - **Same detail page for everyone**: a claimant gets the answer box, staff get the actions. A claimant opening someone
   else's claim gets the backend's "not found".
 
-**Checked.** 36 frontend tests (button rules, identity headers, error messages, role menus, names and ages, the
-claim table's Age column, and a page test for Team workload that feeds the screen made-up answers), and 9 backend
-tests. The app was also driven by a headless Chrome against the real backend running in Docker: 39 checks, in two
-scripts in
-[`frontend/e2e/`](../frontend/e2e/README.md). One goes from a claimant
+**Checked.** 39 frontend tests (button rules, identity headers, error messages, role menus, names and ages, the
+claim table's Age column, and page tests for Team workload and Liability exposure that feed the screens made-up
+answers), and 9 backend tests. The app was also driven by a headless Chrome against the real backend running in
+Docker: 39 checks, in two scripts in [`frontend/e2e/`](../frontend/e2e/README.md). One goes from a claimant
 reporting an incident through pick-up, reserve, a question and its answer, approval, settlement and a manager's
 reassignment, to the manager dashboards and the claimant's Kafka-driven notifications appearing on screen (21
 checks). The other clicks through the manager drill-down: workload to an officer's claims, exposure to who holds
@@ -197,8 +196,8 @@ wording can be checked on any day). They need the whole system running and Chrom
 they are run by hand with `npm test` in that folder and are not part of `ng test`.
 
 **Limits.** No real login, no pagination, polling rather than push, amounts shown without a currency, and no
-page tests except for Team workload (the browser checks cover the other screens instead, but only when run by
-hand). Angular supports Node 22 and 24 (LTS); Node 25 works but prints a warning.
+page tests except for Team workload and Liability exposure (the browser checks cover the other screens instead,
+but only when run by hand). Angular supports Node 22 and 24 (LTS); Node 25 works but prints a warning.
 
 ## 12. Left out (in priority order for next steps)
 
