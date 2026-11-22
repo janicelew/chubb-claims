@@ -1,7 +1,7 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { displayName } from './identity';
+import { claimAge, displayName } from './identity';
 import { Claim } from './models';
 import { StatusBadge } from './status-badge';
 
@@ -22,6 +22,7 @@ import { StatusBadge } from './status-badge';
             }
             <th>Type · market</th>
             <th>Status</th>
+            <th title="How long since the claim was submitted">Age</th>
             <th class="num">Claimed</th>
             <th class="num">Reserve</th>
             <th>Officer</th>
@@ -40,6 +41,7 @@ import { StatusBadge } from './status-badge';
               }
               <td>{{ c.type }} · {{ c.market }}</td>
               <td><app-status-badge [status]="c.status" /></td>
+              <td class="nowrap">{{ age(c) }}</td>
               <td class="num">{{ c.claimedAmount | number: '1.2-2' }}</td>
               <td class="num">{{ c.reserveAmount === null ? 'not set' : (c.reserveAmount | number: '1.2-2') }}</td>
               <td class="nowrap">{{ c.assignedOfficerId === null ? 'Not assigned' : name(c.assignedOfficerId) }}</td>
@@ -64,4 +66,7 @@ export class ClaimTable {
   readonly pickUp = output<Claim>();
 
   protected readonly name = displayName;
+  protected age(c: Claim): string {
+    return claimAge(c.createdAt, c.status);
+  }
 }

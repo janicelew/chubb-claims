@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { DemoUser, Role } from './models';
+import { ClaimStatus, DemoUser, Role } from './models';
 
 /** The demo users from the backend seed data. */
 export const DEMO_USERS: DemoUser[] = [
@@ -27,6 +27,19 @@ export function displayName(id: string | null): string {
 /** "Today", "1 day", "5 days": how long a claim has been open, in whole calendar days. */
 export function ageLabel(days: number): string {
   return days <= 0 ? 'Today' : days === 1 ? '1 day' : `${days} days`;
+}
+
+/**
+ * How old one claim is, for the Age column: "Today", "1 day", "5 days" since it was submitted.
+ * A settled or rejected claim is finished, so it shows a dash. Counts whole 24-hour periods, like the backend does
+ * for the workload page. `now` is a parameter only so a test can pin the time.
+ */
+export function claimAge(createdAt: string, status: ClaimStatus, now: number = Date.now()): string {
+  if (status === 'SETTLED' || status === 'REJECTED') {
+    return '—';
+  }
+  const days = Math.floor((now - Date.parse(createdAt)) / 86_400_000);
+  return ageLabel(Math.max(0, days)); // a clock a little behind the server's must not show "-1 days"
 }
 
 const STORAGE_KEY = 'chubb-claims-demo-user';
