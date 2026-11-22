@@ -43,6 +43,34 @@ try {
   );
   await shot('20-workload-new');
 
+  // 1b. The real data above can't promise a "same-day" claim (it depends on when the demo data was made), so feed
+  // the real screen one made-up answer: an officer whose oldest open claim is 0 days old. Everything else is real.
+  const madeUp = {
+    unassignedClaims: 1,
+    oldestUnassignedDays: 0,
+    officers: [
+      {
+        officerId: 'O-01',
+        name: 'Mei Ling Tan',
+        openClaims: 1,
+        byStatus: { UNDER_REVIEW: 1 },
+        totalReserve: 0,
+        claimedNotYetReserved: 71000,
+        oldestOpenClaimDays: 0,
+      },
+    ],
+  };
+  await page.route('**/api/dashboard/workload', (route) => route.fulfill({ json: madeUp }));
+  await page.reload();
+  await page.locator('tbody tr').first().waitFor();
+  const fakeRow = (await page.locator('tbody tr').first().locator('td').allInnerTexts()).map((t) => t.trim());
+  check("(made-up data) the screen says 'Today' for an oldest claim of 0 days", fakeRow.at(-1) === 'Today', JSON.stringify(fakeRow));
+  check('(made-up data) 71,000 claimed shows next to a reserve of 0.00', fakeRow.includes('0.00') && fakeRow.includes('71,000.00'), JSON.stringify(fakeRow));
+  await shot('20b-workload-made-up-data');
+  await page.unroute('**/api/dashboard/workload'); // back to the real backend for the rest of the checks
+  await page.reload();
+  await page.locator('tbody tr').first().waitFor();
+
   // 2. click an officer -> the claims behind the numbers
   const officerLinks = page.locator('tbody tr a', { hasText: /Raj Kumar|Mei Ling Tan|Tom Wong/ });
   const row = page.locator('tbody tr', { hasText: /[1-9]\d*\s*[A-Za-z]+ ·/ }).first(); // an officer with open claims

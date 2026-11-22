@@ -6,7 +6,7 @@ tests: they need everything running. They check the whole flow end to end, the a
 | Script | What it checks | Checks |
 | --- | --- | --- |
 | `journey.mjs` | A claim from report to payment across all three roles, the cover-limit error, reassigning, the role guards, privacy between claimants, and the Kafka notifications showing on screen | 21 |
-| `drilldown.mjs` | The manager drill-down: workload to an officer's claims, exposure to who holds it, officer names, the "All open claims" page and who can see it | 15 |
+| `drilldown.mjs` | The manager drill-down: workload to an officer's claims, exposure to who holds it, officer names, the "All open claims" page and who can see it | 17 |
 
 ## Run them
 
@@ -31,4 +31,6 @@ Each check prints `PASS` or `FAIL`, and the exit code is non-zero if any fail. S
   to your Chrome, or Playwright looks for an installed Chrome. If the app is not on port 4200, set `APP_URL`.
 - **They add claims to the running backend** (two per run, marked "browser test" or "cover limit"). To start from
   clean demo data: `docker compose down -v`, then `docker compose up --build`.
-- **They are not part of `ng test`.** Those are the 21 unit tests. These need the running system.
+- **They are not part of `ng test`.** Those are the 28 unit and page tests. These need the running system.
+- **Two checks use made-up data on purpose.** The ones marked "(made-up data)" replace the backend's workload
+  answer with a fixed one, so "Today" can be checked on any day. Everything around them is real.
