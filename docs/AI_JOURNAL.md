@@ -82,8 +82,8 @@ left out when it didn't apply.
   the manager's dashboards, and the Kafka notifications appearing on screen. The first run showed weaknesses in
   the browser script itself (one check passed on the wrong text) and noise in the history display
   ("Under review → Under review"). Both were fixed and the run repeated.
-- **Not covered:** The individual pages have no component tests of their own. The browser checks cover them
-  instead, but only when they are run by hand (see entry 11). Angular officially supports Node 22 and 24. This
+- **Not covered:** Only the Team workload page has a page test of its own (entry 11). The other pages are covered
+  by the browser checks, but only when they are run by hand. Angular officially supports Node 22 and 24. This
   machine has Node 25, which works but gives a warning.
 
 ### 9. Trying the app and pushing back on the manager screens
@@ -97,9 +97,9 @@ left out when it didn't apply.
   by officer, market and type) with links from every dashboard number, and officer names instead of bare IDs.
 - **Accepted:** The diagnosis. My challenge also exposed a gap the AI had missed: a manager had no way to reach
   a claim that was already assigned, because no list showed it. The new "All open claims" page closes that.
-- **Checked:** 9 backend tests and 21 frontend tests pass. A new browser script clicked through the drill-down
-  against the rebuilt backend (15 checks), after the earlier full journey was re-run to check nothing broke.
-  Both browser scripts are now in the repo (see entry 11).
+- **Checked:** 9 backend tests and 21 frontend tests passed at that point. A new browser script clicked through
+  the drill-down against the rebuilt backend (15 checks), after the earlier full journey was re-run to check
+  nothing broke. Both browser scripts are now in the repo, and the counts grew later (see entry 11).
 
 ### 10. Commits and GitHub history
 - **Asked:** To commit in small pieces as it worked, so the history shows the steps.
@@ -112,7 +112,7 @@ left out when it didn't apply.
 - **Why:** The history should show my work under my name, and I should check the AI's explanation against
   evidence before accepting it.
 
-### 11. Putting the browser checks in the repo
+### 11. Putting the browser checks in the repo, and the gap they left
 - **Challenged:** The journal said the browser script was "not in the repo". I asked what that meant. It meant the
   checks I'd been quoting could only be run from the AI's scratch folder, so nobody else could re-run them.
 - **Asked:** To add both scripts to the repo, with a README on how to run them. They live in `frontend/e2e/`,
@@ -124,6 +124,19 @@ left out when it didn't apply.
   day old, so no officer's oldest claim could say "Today". The check only passed on the day the data was
   created. I accepted the fix: the check now tests the wording (a dash, "Today", or 1 or more days, never 0),
   and the exact "Today" rule stays covered by a unit test. Result: 21 of 21 and 15 of 15 pass.
+- **Challenged:** That fix left a gap: nothing proved the screen itself shows "Today", only the rule behind it. I
+  asked the AI for options and chose two of them:
+  - A **page test** for the Team workload screen, with made-up backend answers. It runs inside `npm test`, needs
+    nothing else running, and gives the same result on any day. It covers "Today" and "1 day", a dash when an
+    officer has no open claims, 71,000 claimed next to a reserve of 0.00 (the misleading case from entry 9),
+    the unassigned backlog, the link to each officer's claims, and the message when the backend can't be reached.
+  - Two **browser checks using a made-up workload answer**, so the real screen can be checked for "Today" on any
+    day. The README for the scripts says which checks use made-up data.
+- **Checked:** A test that has never failed proves little, so the AI broke things on purpose. With the workload
+  page changed to print the raw number, the page tests failed with "expected '0' to be 'Today'", which is the
+  original bug. With the made-up claim aged 5 days, the browser check failed too. Both were put back.
+  Result: 28 frontend tests and 38 browser checks (21 + 17) pass. Only Team workload has a page test; the other
+  pages are covered by the browser checks, which are run by hand.
 - **Why:** A check that depends on today's date will fail for the next person, and a number I can't reproduce
   isn't worth quoting.
 
