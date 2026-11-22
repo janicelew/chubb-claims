@@ -1,0 +1,14 @@
+{
+  "name": "claims-e2e",
+  "private": true,
+  "description": "Browser checks that click through the running app and backend",
+  "type": "module",
+  "scripts": {
+    "journey": "node journey.mjs",
+    "drilldown": "node drilldown.mjs",
+    "test": "node journey.mjs && node drilldown.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "^1.65.1"
+  }
+}
